@@ -1,6 +1,6 @@
-const axios = require('axios');
+import axios from 'axios';
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
     // 跨域设置
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
 
     try {
         const { videoUrl } = req.body;
-
+        
         // 调用 Coze 工作流
         const response = await axios.post(
             'https://api.coze.cn/v1/workflow/run',
@@ -35,4 +35,4 @@ module.exports = async (req, res) => {
         console.error('API Error:', error.message);
         res.status(500).json({ error: 'Failed to process workflow' });
     }
-};
+}
