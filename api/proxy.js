@@ -1,5 +1,10 @@
 import axios from 'axios';
 
+// 👇 同样强制指定为 Node.js 环境
+export const config = {
+  runtime: 'nodejs',
+};
+
 export default async function handler(req, res) {
     // 跨域设置
     res.setHeader('Access-Control-Allow-Credentials', true);
