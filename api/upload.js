@@ -1,27 +1,26 @@
-import { handleUpload } from '@vercel/blob';
+const { handleUpload } = require('@vercel/blob');
 
-// 👇 核心修复：显式告诉 Vercel 这不是 Edge 模式，是 Node.js 模式
-export const config = {
-  runtime: 'nodejs',
+// 强制指定环境，不给 Vercel 误判的机会
+module.exports.config = {
+  runtime: 'nodejs'
 };
 
-export default async function handler(request, response) {
+module.exports = async function handler(req, res) {
   try {
     const jsonResponse = await handleUpload({
-      body: request.body,
-      request,
+      body: req.body,
+      request: req,
       onBeforeGenerateToken: async () => ({
         allowedContentTypes: ['video/mp4', 'video/quicktime', 'video/x-ms-wmv', 'video/avi'],
         tokenPayload: JSON.stringify({}),
       }),
       onUploadCompleted: async ({ blob }) => {
-        console.log('Upload completed:', blob.url);
+        console.log('Blob created:', blob.url);
       },
     });
 
-    return response.status(200).json(jsonResponse);
+    return res.status(200).json(jsonResponse);
   } catch (error) {
-    console.error("Upload Error:", error);
-    return response.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
-}
+};
