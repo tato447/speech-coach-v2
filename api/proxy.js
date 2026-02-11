@@ -1,11 +1,11 @@
-import axios from 'axios';
+const axios = require('axios');
 
-// 👇 同样强制指定为 Node.js 环境
-export const config = {
+// ⬇️ 同样强制指定 Node.js 环境
+module.exports.config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req, res) {
+module.exports.default = async (req, res) => {
     // 跨域设置
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -40,4 +40,4 @@ export default async function handler(req, res) {
         console.error('API Error:', error.message);
         res.status(500).json({ error: 'Failed to process workflow' });
     }
-}
+};
