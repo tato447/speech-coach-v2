@@ -1,10 +1,10 @@
-import axios from 'axios';
+const axios = require('axios');
 
-export const config = {
-  runtime: 'nodejs',
+module.exports.config = {
+  runtime: 'nodejs'
 };
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -29,7 +29,6 @@ export default async function handler(req, res) {
         );
         res.status(200).json(response.data);
     } catch (error) {
-        console.error('API Error:', error.message);
-        res.status(500).json({ error: 'Failed to process workflow' });
+        res.status(500).json({ error: error.message });
     }
-}
+};
