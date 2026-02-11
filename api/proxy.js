@@ -1,11 +1,11 @@
 const axios = require('axios');
 
-// 👇 同样强制指定 Node.js 环境
 module.exports.config = {
   runtime: 'nodejs',
 };
 
-module.exports.default = async (req, res) => {
+// ⬇️ 修复点：直接导出函数
+module.exports = async (req, res) => {
     // 跨域设置
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,8 +16,7 @@ module.exports.default = async (req, res) => {
 
     try {
         const { videoUrl } = req.body;
-
-        // 调用 Coze 工作流
+        
         const response = await axios.post(
             'https://api.coze.cn/v1/workflow/run',
             {
