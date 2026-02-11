@@ -3,59 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>鲸晓鸣 - 专业播音训练分析与改进工具</title>
-    <link rel="icon" type="image/png" href="logo.png">
+    <title>鲸晓鸣 - 播音训练分析</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@vercel/blob@0.22.0/dist/index.min.js"></script>
     <style>
-        body { font-family: 'PingFang SC', -apple-system, sans-serif; background-color: #f3f6fa; color: #1f2937; }
+        body { font-family: 'PingFang SC', sans-serif; background-color: #f3f6fa; }
         .glass-card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
-        /* 还原图15的报告样式 */
-        .markdown-body h2 { font-size: 1.1rem; color: #2563eb; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-        .markdown-body p { font-size: 0.95rem; color: #4b5563; line-height: 1.8; margin-bottom: 1rem; }
         .loading-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <header class="bg-white shadow-sm sticky top-0 z-50 h-16">
+    <header class="bg-white shadow-sm h-16 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 h-full flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <img src="logo.png" alt="Logo" class="w-8 h-8 rounded object-cover" onerror="this.style.display='none'">
-                <div>
-                    <h1 class="text-base font-bold text-gray-800">鲸晓鸣</h1>
-                    <p class="text-[10px] text-gray-500 font-medium">专业的播音训练分析与改进工具</p>
-                </div>
+                <img src="logo.png" alt="Logo" class="w-8 h-8 rounded" onerror="this.style.display='none'">
+                <div><h1 class="text-base font-bold">鲸晓鸣</h1><p class="text-[10px] text-gray-500">专业的播音训练分析与改进工具</p></div>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="text-right hidden sm:block">
-                    <div class="text-xs font-bold text-gray-700">用户</div>
-                    <div class="text-[10px] text-gray-400">播音训练教练</div>
-                </div>
-                <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-xs font-bold">U</div>
-                <div class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">专业版</div>
-            </div>
+            <div class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">专业版</div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div class="lg:col-span-5 space-y-4">
             <div class="glass-card p-5">
-                <h2 class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-upload text-blue-600"></i> 视频上传
-                </h2>
-
-                <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-all hover:border-blue-400 hover:bg-gray-50 cursor-pointer" onclick="document.getElementById('file-input').click()">
-                    <input type="file" id="file-input" class="hidden" accept="video/mp4,video/avi,video/quicktime,video/x-ms-wmv" onchange="handleFileSelect(this)">
+                <h2 class="font-bold text-sm mb-4 flex items-center gap-2"><i class="fa-solid fa-upload text-blue-600"></i> 视频上传</h2>
+                
+                <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 hover:bg-gray-50 cursor-pointer" onclick="document.getElementById('file-input').click()">
+                    <input type="file" id="file-input" class="hidden" accept="video/*" onchange="handleFileSelect(this)">
                     <div class="flex flex-col items-center justify-center min-h-[160px]">
                         <i class="fa-regular fa-file-video text-4xl text-gray-300 mb-4"></i>
-                        <p class="text-gray-700 font-bold mb-2">拖拽视频文件到此处，或点击选择文件</p>
-                        <p class="text-xs text-gray-400 mb-6">支持 MP4、AVI、MOV、WMV 格式，最大 52MB</p>
-                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded text-sm font-medium transition-colors w-full">
-                            选择视频文件
-                        </button>
+                        <p class="text-gray-700 font-bold mb-2">点击选择或拖拽视频</p>
+                        <p class="text-xs text-gray-400">支持 MP4, AVI, MOV, WMV (最大 52MB)</p>
                     </div>
                 </div>
 
@@ -63,7 +44,7 @@
                     <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center gap-3 mb-4">
                         <i class="fa-solid fa-file-video text-blue-600 text-xl"></i>
                         <div class="flex-1 min-w-0">
-                            <p id="file-name" class="text-sm font-bold text-gray-800 truncate">video.mp4</p>
+                            <p id="file-name" class="text-sm font-bold truncate">文件名.mp4</p>
                             <p id="file-size" class="text-xs text-gray-500">0 MB</p>
                         </div>
                         <button onclick="clearFile()" class="text-gray-400 hover:text-red-500"><i class="fa-regular fa-trash-can"></i></button>
@@ -79,93 +60,48 @@
                         </div>
                     </div>
 
-                    <button id="start-btn" onclick="handleUploadAndAnalyze()" class="w-full bg-green-500 hover:bg-green-600 text-white py-2.5 rounded text-sm font-bold shadow-lg shadow-green-500/20 transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-chart-simple"></i> 开始AI分析
+                    <button id="start-btn" onclick="handleUploadAndAnalyze()" class="w-full bg-green-500 hover:bg-green-600 text-white py-2.5 rounded text-sm font-bold flex items-center justify-center gap-2">
+                        开始AI分析
                     </button>
                 </div>
-            </div>
-
-            <div class="glass-card p-5">
-                <h3 class="font-bold text-sm mb-4 text-blue-600">使用说明</h3>
-                <ul class="space-y-4">
-                    <li class="flex gap-3 items-start text-xs text-gray-600">
-                        <span class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold shrink-0">1</span>
-                        <span>上传您的播音训练视频（1-5分钟）</span>
-                    </li>
-                    <li class="flex gap-3 items-start text-xs text-gray-600">
-                        <span class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold shrink-0">2</span>
-                        <span>等待AI分析您的播音表现</span>
-                    </li>
-                    <li class="flex gap-3 items-start text-xs text-gray-600">
-                        <span class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold shrink-0">3</span>
-                        <span>查看详细的分析报告和改进建议</span>
-                    </li>
-                    <li class="flex gap-3 items-start text-xs text-gray-600">
-                        <span class="w-5 h-5 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold shrink-0">4</span>
-                        <span>下载PDF报告用于后续参考</span>
-                    </li>
-                </ul>
             </div>
         </div>
 
         <div class="lg:col-span-7">
-            <div class="glass-card min-h-[600px] flex flex-col relative h-full">
-                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-xl sticky top-0 z-10">
-                    <h2 class="font-bold text-sm text-gray-800 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-bar text-blue-600"></i> 分析报告
-                    </h2>
-                    <a id="download-btn" href="#" target="_blank" class="hidden bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1 rounded text-[10px] font-bold border border-green-200 transition-colors">
-                        <i class="fa-solid fa-download"></i> 下载报告
-                    </a>
-                </div>
-
+            <div class="glass-card min-h-[500px] flex flex-col relative h-full">
                 <div id="report-empty" class="flex-1 flex flex-col items-center justify-center text-gray-300">
                     <i class="fa-solid fa-chart-simple text-6xl mb-4 opacity-10"></i>
-                    <p class="text-xs text-gray-400">上传视频后，AI分析报告将在此显示</p>
+                    <p class="text-xs">分析报告将在此显示</p>
                 </div>
-
-                <div id="report-loading" class="hidden absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center backdrop-blur-sm rounded-xl">
+                <div id="report-loading" class="hidden absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center">
                     <div class="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full loading-spin mb-4"></div>
-                    <p class="text-sm font-bold text-blue-600 animate-pulse">正在进行深度分析...</p>
-                    <p class="text-[10px] text-gray-400 mt-2 tracking-widest uppercase">Analyzing performance...</p>
+                    <p class="text-sm font-bold text-blue-600">正在进行AI深度分析...</p>
                 </div>
-
-                <div id="report-content" class="hidden flex-1 p-8 overflow-y-auto bg-white rounded-b-xl">
-                    <div id="markdown-container" class="markdown-body"></div>
+                <div id="report-content" class="hidden flex-1 p-6 overflow-y-auto">
+                    <div id="markdown-container" class="prose prose-sm max-w-none"></div>
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        // 🛠️ 关键修复：把 UI 切换函数直接挂载到全局，确保万无一失
         let selectedFile = null;
-
-        window.handleFileSelect = function(input) {
-            if (input.files && input.files[0]) {
+        function handleFileSelect(input) {
+            if (input.files[0]) {
                 selectedFile = input.files[0];
-                console.log("已选中视频:", selectedFile.name);
-                
-                // 切换 UI
                 document.getElementById('upload-zone').classList.add('hidden');
                 document.getElementById('file-selected-zone').classList.remove('hidden');
-                
-                // 更新信息
                 document.getElementById('file-name').innerText = selectedFile.name;
-                document.getElementById('file-size').innerText = (selectedFile.size / (1024 * 1024)).toFixed(2) + " MB";
+                document.getElementById('file-size').innerText = (selectedFile.size / 1024 / 1024).toFixed(2) + " MB";
             }
-        };
-
-        window.clearFile = function() {
+        }
+        function clearFile() {
             selectedFile = null;
             document.getElementById('file-input').value = '';
             document.getElementById('upload-zone').classList.remove('hidden');
             document.getElementById('file-selected-zone').classList.add('hidden');
             document.getElementById('progress-wrapper').classList.add('hidden');
-            const btn = document.getElementById('start-btn');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-chart-simple"></i> 开始AI分析';
-        };
+        }
     </script>
 
     <script type="module">
@@ -173,7 +109,6 @@
 
         window.handleUploadAndAnalyze = async function() {
             if (!selectedFile) return;
-
             const btn = document.getElementById('start-btn');
             const progressWrapper = document.getElementById('progress-wrapper');
             const progressBar = document.getElementById('progress-bar');
@@ -185,7 +120,7 @@
             progressWrapper.classList.remove('hidden');
 
             try {
-                // 1. 上传视频
+                // 1. 调用 Vercel Blob 进行上传，并实时更新进度条
                 const blob = await upload(selectedFile.name, selectedFile, {
                     access: 'public',
                     handleUploadUrl: '/api/upload',
@@ -196,7 +131,8 @@
                     }
                 });
 
-                // 2. 开始分析
+                // 2. 上传完成，切换到分析状态
+                document.getElementById('progress-text').innerText = "✅ 上传完成，正在交由AI分析...";
                 reportLoading.classList.remove('hidden');
                 document.getElementById('report-empty').classList.add('hidden');
 
@@ -217,14 +153,8 @@
                 try {
                     const data = typeof json.data === 'string' ? JSON.parse(json.data) : json.data;
                     md = data.output;
-                    if(data.pdf_url) {
-                        const dl = document.getElementById('download-btn');
-                        dl.href = data.pdf_url;
-                        dl.classList.remove('hidden');
-                        dl.classList.add('inline-flex');
-                    }
                 } catch(e) {
-                    md = json.data.output || "解析报告出错";
+                    md = json.data.output || "分析数据解析失败";
                 }
 
                 document.getElementById('markdown-container').innerHTML = marked.parse(md);
@@ -232,7 +162,7 @@
 
             } catch (error) {
                 console.error(error);
-                alert("流程出错: " + error.message);
+                alert("流程中断: " + error.message);
                 reportLoading.classList.add('hidden');
                 btn.disabled = false;
                 btn.classList.remove('opacity-50');
