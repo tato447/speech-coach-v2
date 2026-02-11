@@ -1,12 +1,7 @@
-import axios from 'axios';
+const axios = require('axios');
 
-// 强制指定 Node.js 环境
-export const config = {
-  runtime: 'nodejs',
-};
-
-export default async function handler(req, res) {
-    // 跨域头设置
+module.exports = async (req, res) => {
+    // 跨域设置
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -17,14 +12,11 @@ export default async function handler(req, res) {
     try {
         const { videoUrl } = req.body;
         
-        // 调用 Coze
         const response = await axios.post(
             'https://api.coze.cn/v1/workflow/run',
             {
                 workflow_id: process.env.WORKFLOW_ID,
-                parameters: {
-                    input: videoUrl 
-                }
+                parameters: { input: videoUrl }
             },
             {
                 headers: {
@@ -36,7 +28,7 @@ export default async function handler(req, res) {
 
         res.status(200).json(response.data);
     } catch (error) {
-        console.error('API Error:', error.message);
+        console.error(error.message);
         res.status(500).json({ error: 'Failed to process workflow' });
     }
-}
+};
