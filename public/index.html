@@ -3,90 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>鲸晓鸣 - 故障诊断版</title>
+    <title>鲸晓鸣 - 专业播音训练分析</title>
+    <link rel="icon" type="image/png" href="logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'PingFang SC', -apple-system, sans-serif; background-color: #f3f6fa; }
+        .glass-card { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); border: 1px solid #e5e7eb; }
+        .markdown-body h2 { font-size: 1.1rem; color: #2563eb; font-weight: 700; margin-top: 1.5em; border-bottom: none; margin-bottom: 0.5em; }
+        .markdown-body p { color: #4b5563; line-height: 1.8; margin-bottom: 1em; }
+        .drag-active { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
+        .loading-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
 </head>
-<body class="bg-slate-50">
-    <div class="max-w-xl mx-auto mt-20 p-6 bg-white rounded-xl shadow-lg border border-red-100">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <i class="fa-solid fa-stethoscope text-red-500"></i> 系统连通性诊断
-        </h2>
-        
-        <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center mb-6">
-            <input type="file" id="file-input" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4"/>
-            <button id="start-btn" onclick="runDiagnostic()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors">
-                开始诊断并上传
-            </button>
+<body>
+    <header class="bg-white shadow-sm sticky top-0 z-50 h-16">
+        <div class="max-w-7xl mx-auto px-4 h-full flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="logo.png" alt="Logo" class="w-8 h-8 rounded object-cover" onerror="this.style.display='none'">
+                <div><h1 class="text-base font-bold text-gray-800 tracking-wide">鲸晓鸣</h1><p class="text-[10px] text-gray-500">专业的播音训练分析与改进工具</p></div>
+            </div>
+            <div class="flex items-center gap-3"><div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-xs font-bold">U</div></div>
         </div>
-
-        <div id="debug-log" class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-xs overflow-x-auto whitespace-pre-wrap hidden"></div>
-    </div>
-
+    </header>
+    <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 space-y-4">
+            <div class="glass-card p-5">
+                <h2 class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2"><i class="fa-solid fa-upload text-blue-600"></i> 视频上传</h2>
+                <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-all hover:border-blue-400 hover:bg-gray-50 cursor-pointer" onclick="document.getElementById('file-input').click()">
+                    <input type="file" id="file-input" class="hidden" accept="video/*">
+                    <div class="flex flex-col items-center justify-center min-h-[160px]">
+                        <i class="fa-regular fa-file-video text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-700 font-bold mb-2">点击或拖拽上传视频</p>
+                        <p class="text-xs text-gray-400 mb-6">支持 MP4, MOV 等格式，最大 52MB</p>
+                        <button class="bg-blue-600 text-white px-8 py-2.5 rounded text-sm font-medium">选择视频文件</button>
+                    </div>
+                </div>
+                <div id="file-selected-zone" class="hidden">
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center gap-3 mb-4">
+                        <i class="fa-solid fa-file-video text-blue-600 text-xl"></i>
+                        <div class="flex-1 min-w-0"><p id="file-name" class="text-sm font-bold text-gray-800 truncate">video.mp4</p><p id="file-size" class="text-xs text-gray-500">0 MB</p></div>
+                        <button onclick="clearFile()" class="text-gray-400 hover:text-red-500"><i class="fa-regular fa-trash-can"></i></button>
+                    </div>
+                    <div id="progress-wrapper" class="hidden mb-4"><div class="w-full bg-gray-200 rounded-full h-1.5"><div id="progress-bar" class="bg-blue-600 h-1.5 rounded-full" style="width: 0%"></div></div></div>
+                    <button id="start-btn" onclick="handleUploadAndAnalyze()" class="w-full bg-green-500 hover:bg-green-600 text-white py-2.5 rounded text-sm font-bold flex items-center justify-center gap-2">开始AI分析</button>
+                </div>
+            </div>
+        </div>
+        <div class="lg:col-span-7">
+            <div class="glass-card min-h-[500px] flex flex-col relative h-full p-4">
+                <div id="report-empty" class="flex-1 flex flex-col items-center justify-center text-gray-300"><i class="fa-solid fa-chart-simple text-6xl mb-4 opacity-20"></i><p class="text-xs">暂无报告</p></div>
+                <div id="report-loading" class="hidden absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center"><div class="w-10 h-10 border-3 border-blue-100 border-t-blue-600 rounded-full loading-spin mb-4"></div><p class="text-sm font-bold text-blue-600 animate-pulse">正在分析...</p></div>
+                <div id="report-content" class="hidden flex-1 overflow-y-auto"><div id="markdown-container" class="markdown-body"></div></div>
+            </div>
+        </div>
+    </main>
     <script type="module">
         import { upload } from 'https://esm.sh/@vercel/blob@0.23.0/client';
+        let selectedFile = null;
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+        
+        uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-active'); });
+        uploadZone.addEventListener('dragleave', (e) => { e.preventDefault(); uploadZone.classList.remove('drag-active'); });
+        uploadZone.addEventListener('drop', (e) => { e.preventDefault(); uploadZone.classList.remove('drag-active'); if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+        fileInput.addEventListener('change', (e) => { if(e.target.files[0]) handleFile(e.target.files[0]); });
 
-        window.runDiagnostic = async function() {
-            const fileInput = document.getElementById('file-input');
-            const logEl = document.getElementById('debug-log');
-            
-            if (!fileInput.files[0]) {
-                alert("请先选择一个视频文件！");
-                return;
-            }
+        function handleFile(file) { selectedFile = file; uploadZone.classList.add('hidden'); document.getElementById('file-selected-zone').classList.remove('hidden'); document.getElementById('file-name').innerText = file.name; document.getElementById('file-size').innerText = (file.size/1024/1024).toFixed(2)+" MB"; }
+        window.clearFile = function() { selectedFile=null; fileInput.value=''; uploadZone.classList.remove('hidden'); document.getElementById('file-selected-zone').classList.add('hidden'); document.getElementById('progress-wrapper').classList.add('hidden'); document.getElementById('start-btn').disabled=false; document.getElementById('start-btn').innerHTML='开始AI分析'; }
 
-            const file = fileInput.files[0];
-            logEl.classList.remove('hidden');
-            logEl.innerText = "🚀 开始诊断流程...\n";
-
-            function log(msg) {
-                logEl.innerText += `[${new Date().toLocaleTimeString()}] ${msg}\n`;
-            }
-
+        window.handleUploadAndAnalyze = async function() {
+            if (!selectedFile) return;
+            const btn = document.getElementById('start-btn');
+            btn.disabled = true; document.getElementById('progress-wrapper').classList.remove('hidden');
             try {
-                // 1. 侦察兵：手动测试 API 连通性
-                log("📡 步骤1: 正在 Ping 后端接口 (/api/upload)...");
-                
-                const pingRes = await fetch('/api/upload', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    // 发送一个假的握手包，看看服务器怎么回
-                    body: JSON.stringify({ type: 'blob.generate-client-token', payload: {} }) 
-                });
-
-                log(`⬅️ 服务器状态码: ${pingRes.status} ${pingRes.statusText}`);
-                
-                const responseText = await pingRes.text();
-                log(`📄 服务器原始响应: ${responseText.slice(0, 200)}...`); // 只显示前200字
-
-                if (pingRes.status === 404) {
-                    throw new Error("❌ 严重故障: 找不到接口 (404)。可能是文件名不对，或者 Vercel 路由没生效。");
-                }
-                if (pingRes.status === 500) {
-                    throw new Error(`❌ 服务器内部错误 (500)。\n请去 Vercel 后台看 Logs。\n错误详情: ${responseText}`);
-                }
-                if (!pingRes.ok) {
-                    throw new Error(`❌ 接口异常 (${pingRes.status}): ${responseText}`);
-                }
-
-                log("✅ 接口连通性测试通过！准备调用 SDK 上传...");
-
-                // 2. 正式上传
-                const blob = await upload(file.name, file, {
-                    access: 'public',
-                    handleUploadUrl: '/api/upload',
-                    onUploadProgress: (p) => log(`⏳ 上传进度: ${p.percentage}%`)
-                });
-
-                log(`🎉 上传成功！文件 URL:\n${blob.url}`);
-                alert("恭喜！上传成功！问题已解决。");
-
-            } catch (error) {
-                console.error(error);
-                log(`💥 流程终止: ${error.message}`);
-                alert(`诊断发现问题：\n${error.message}`);
-            }
+                const blob = await upload(selectedFile.name, selectedFile, { access: 'public', handleUploadUrl: '/api/upload', onUploadProgress: (p) => { document.getElementById('progress-bar').style.width = p.percentage+'%'; } });
+                document.getElementById('report-loading').classList.remove('hidden'); document.getElementById('report-empty').classList.add('hidden');
+                const res = await fetch('/api/proxy', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ videoUrl: blob.url }) });
+                const json = await res.json();
+                if(json.code!==0) throw new Error(json.msg||"API Error");
+                let md = ""; try { md = JSON.parse(json.data).output; } catch(e) { md = json.data.output; }
+                document.getElementById('report-loading').classList.add('hidden'); document.getElementById('report-content').classList.remove('hidden');
+                document.getElementById('markdown-container').innerHTML = marked.parse(md);
+                btn.innerHTML = '✅ 完成';
+            } catch(e) { alert("出错: "+e.message); document.getElementById('report-loading').classList.add('hidden'); btn.disabled=false; btn.innerHTML='重试'; }
         }
     </script>
 </body>
