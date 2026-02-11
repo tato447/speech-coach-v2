@@ -1,46 +1,123 @@
-<script src="https://cdn.jsdelivr.net/npm/@vercel/blob@0.22.1/dist/index.js"></script>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鲸晓鸣 - 专业播音训练分析与改进工具</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@vercel/blob@0.22.1/dist/index.min.js"></script>
+    <style>
+        body { font-family: 'PingFang SC', -apple-system, sans-serif; background-color: #f3f6fa; }
+        .glass-card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
+        .loading-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <header class="bg-white shadow-sm h-16 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-full flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="logo.png" alt="Logo" class="w-8 h-8 rounded" onerror="this.style.display='none'">
+                <div><h1 class="text-base font-bold text-gray-800">鲸晓鸣</h1><p class="text-[10px] text-gray-500">专业的播音训练分析与改进工具</p></div>
+            </div>
+            <div class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">专业版</div>
+        </div>
+    </header>
 
-<script>
-    // 强制挂载到 window，确保按钮能点着
-    window.handleUploadAndAnalyze = async function() {
-        const fileInput = document.getElementById('file-input');
-        const file = fileInput.files[0];
-        if (!file) return alert("请先选择视频");
+    <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 space-y-4">
+            <div class="glass-card p-5">
+                <h2 class="font-bold text-sm mb-4 flex items-center gap-2"><i class="fa-solid fa-upload text-blue-600"></i> 视频上传</h2>
+                <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-all hover:border-blue-400 hover:bg-gray-50 cursor-pointer" onclick="document.getElementById('file-input').click()">
+                    <input type="file" id="file-input" class="hidden" accept="video/*" onchange="handleFileSelect(this)">
+                    <div class="flex flex-col items-center justify-center min-h-[160px]">
+                        <i class="fa-regular fa-file-video text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-700 font-bold mb-2">拖拽视频文件到此处，或点击选择文件</p>
+                        <p class="text-xs text-gray-400 mb-6">支持 MP4、AVI、MOV、WMV 格式，最大 52MB</p>
+                        <button class="bg-blue-600 text-white px-8 py-2.5 rounded text-sm font-medium w-full">选择视频文件</button>
+                    </div>
+                </div>
+                <div id="file-selected-zone" class="hidden">
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center gap-3 mb-4">
+                        <i class="fa-solid fa-file-video text-blue-600 text-xl"></i>
+                        <div class="flex-1 min-w-0"><p id="file-name" class="text-sm font-bold truncate">video.mp4</p><p id="file-size" class="text-xs text-gray-500">0 MB</p></div>
+                        <button onclick="clearFile()" class="text-gray-400 hover:text-red-500"><i class="fa-regular fa-trash-can"></i></button>
+                    </div>
+                    <div id="progress-wrapper" class="hidden mb-4"><div class="w-full bg-gray-200 rounded-full h-1.5"><div id="progress-bar" class="bg-blue-600 h-1.5 rounded-full" style="width: 0%"></div></div></div>
+                    <button id="start-btn" onclick="handleUploadAndAnalyze()" class="w-full bg-green-500 text-white py-2.5 rounded text-sm font-bold">开始AI分析</button>
+                </div>
+            </div>
+        </div>
+        <div class="lg:col-span-7">
+            <div class="glass-card min-h-[500px] flex flex-col relative h-full">
+                <div id="report-empty" class="flex-1 flex flex-col items-center justify-center text-gray-300"><i class="fa-solid fa-chart-simple text-6xl mb-4 opacity-10"></i><p class="text-xs text-gray-400">报告将在此显示</p></div>
+                <div id="report-loading" class="hidden absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center"><div class="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full loading-spin mb-4"></div><p class="text-sm font-bold text-blue-600">正在进行AI深度分析...</p></div>
+                <div id="report-content" class="hidden flex-1 p-8 overflow-y-auto"><div id="markdown-container" class="prose prose-sm max-w-none"></div></div>
+            </div>
+        </div>
+    </main>
 
-        const btn = document.getElementById('start-btn');
-        btn.disabled = true;
-        btn.innerText = "正在获取令牌...";
-
-        try {
-            // 使用全局 vercelBlob 变量
-            const { upload } = vercelBlob; 
-            
-            const blob = await upload(file.name, file, {
-                access: 'public',
-                handleUploadUrl: '/api/upload',
-                onUploadProgress: (p) => {
-                    // 这里更新你的进度条
-                    console.log("进度:", p.percentage);
-                }
-            });
-
-            console.log("上传成功:", blob.url);
-            btn.innerText = "分析中...";
-
-            // 调用你的代理接口
-            const res = await fetch('/api/proxy', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ videoUrl: blob.url })
-            });
-            const result = await res.json();
-            // ... 渲染 Markdown 的逻辑 ...
-            btn.innerText = "完成";
-
-        } catch (error) {
-            console.error(error);
-            alert("出错啦: " + error.message);
-            btn.disabled = false;
+    <script>
+        let selectedFile = null;
+        // 🛠️ 关键修复：把所有逻辑放进标准 JavaScript，不使用 type="module"
+        function handleFileSelect(input) {
+            if (input.files[0]) {
+                selectedFile = input.files[0];
+                document.getElementById('upload-zone').classList.add('hidden');
+                document.getElementById('file-selected-zone').classList.remove('hidden');
+                document.getElementById('file-name').innerText = selectedFile.name;
+                document.getElementById('file-size').innerText = (selectedFile.size / 1024 / 1024).toFixed(2) + " MB";
+            }
         }
-    };
-</script>
+        function clearFile() {
+            selectedFile = null;
+            document.getElementById('file-input').value = '';
+            document.getElementById('upload-zone').classList.remove('hidden');
+            document.getElementById('file-selected-zone').classList.add('hidden');
+        }
+
+        async function handleUploadAndAnalyze() {
+            if (!selectedFile) return;
+            const btn = document.getElementById('start-btn');
+            const progressWrapper = document.getElementById('progress-wrapper');
+            const progressBar = document.getElementById('progress-bar');
+            
+            btn.disabled = true;
+            progressWrapper.classList.remove('hidden');
+
+            try {
+                // 使用全局加载的 vercelBlob 变量
+                const { upload } = vercelBlob;
+                const blob = await upload(selectedFile.name, selectedFile, {
+                    access: 'public',
+                    handleUploadUrl: '/api/upload',
+                    onUploadProgress: (p) => { progressBar.style.width = p.percentage + '%'; }
+                });
+
+                document.getElementById('report-loading').classList.remove('hidden');
+                document.getElementById('report-empty').classList.add('hidden');
+
+                const res = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ videoUrl: blob.url })
+                });
+
+                const json = await res.json();
+                const data = typeof json.data === 'string' ? JSON.parse(json.data) : json.data;
+                
+                document.getElementById('report-loading').classList.add('hidden');
+                document.getElementById('report-content').classList.remove('hidden');
+                document.getElementById('markdown-container').innerHTML = marked.parse(data.output);
+                btn.innerHTML = '分析完成';
+            } catch (e) {
+                alert("流程失败: " + e.message);
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
