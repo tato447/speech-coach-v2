@@ -1,6 +1,6 @@
 const { handleUpload } = require('@vercel/blob');
 
-// ⬇️ 强制指定 Node.js 环境（这是防止报错的关键！）
+// 👇 核心修复：这行代码强制 Vercel 使用 Node.js 运行，彻底解决 "Edge" 报错
 module.exports.config = {
   runtime: 'nodejs',
 };
@@ -25,7 +25,7 @@ module.exports.default = async function handler(request, response) {
 
     response.status(200).json(jsonResponse);
   } catch (error) {
-    console.error("Upload Error:", error);
+    console.error("Token Error:", error);
     response.status(400).json({ error: error.message });
   }
 };
