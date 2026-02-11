@@ -1,6 +1,6 @@
-const { handleUpload } = require('@vercel/blob');
+import { handleUpload } from '@vercel/blob';
 
-module.exports = async function handler(request, response) {
+export default async function handler(request, response) {
   const body = request.body;
 
   try {
