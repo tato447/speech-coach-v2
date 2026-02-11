@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鲸晓鸣 - 专业播音训练分析</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'PingFang SC', sans-serif; background-color: #f8fafc; }
+        .glass-card { background: white; border-radius: 20px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); }
+        .markdown-body h2 { font-size: 1.2rem; color: #1e40af; font-weight: 700; margin-top: 1.5em; border-bottom: 1px solid #e2e8f0; }
+        .markdown-body p { color: #475569; line-height: 1.75; margin-bottom: 1em; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .drag-active { border-color: #3b82f6 !important; background-color: #eff6ff !important; transform: scale(1.02); }
+    </style>
+</head>
+<body>
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <img src="logo.png" alt="Logo" class="w-10 h-10 rounded-xl object-cover border border-slate-100">
+                <div><h1 class="text-lg font-bold text-slate-800">鲸晓鸣</h1><p class="text-[10px] text-slate-400 font-medium">AI Speech Coach</p></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-5 space-y-6">
+            <div class="glass-card p-6">
+                <h2 class="font-bold text-lg mb-6">视频上传</h2>
+                <div id="upload-zone" class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-400 transition-all" onclick="document.getElementById('file-input').click()">
+                    <input type="file" id="file-input" class="hidden" accept="video/mp4,video/avi,video/mov,video/wmv">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-300 mb-4"></i>
+                    <p class="text-slate-600">点击或拖拽视频文件</p>
+                </div>
+                <div id="file-selected-zone" class="hidden">
+                    <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl flex items-center gap-4 mb-6">
+                        <i class="fa-solid fa-file-video text-red-500 text-xl"></i>
+                        <div class="flex-1"><p id="file-name" class="font-bold text-sm text-slate-700">video.mp4</p><p id="file-size" class="text-xs text-slate-400">0 MB</p></div>
+                        <button onclick="clearFile()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <button id="start-btn" onclick="handleUploadAndAnalyze()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2">开始 AI 深度分析</button>
+                    <div id="progress-wrapper" class="hidden mt-6"><div class="flex justify-between text-xs mb-2"><span id="progress-text">准备上传...</span><span id="progress-percent">0%</span></div><div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden"><div id="progress-bar" class="bg-blue-600 h-full w-0 transition-all duration-300"></div></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-7">
+            <div class="glass-card h-full min-h-[600px] flex flex-col relative">
+                <div id="report-empty" class="flex-1 flex flex-col items-center justify-center text-slate-300"><i class="fa-solid fa-clipboard-list text-4xl mb-4"></i><p>暂无分析结果</p></div>
+                <div id="report-loading" class="hidden flex-1 flex flex-col items-center justify-center absolute inset-0 bg-white/60 backdrop-blur-sm z-10"><div class="w-12 h-12 border-4 border-slate-100 border-t-blue-500 rounded-full animate-spin mb-4"></div><p class="font-bold text-slate-700 animate-pulse">正在深度分析...</p></div>
+                <div id="report-content" class="hidden flex-1 p-8 overflow-y-auto no-scrollbar"><div id="markdown-container" class="markdown-body"></div></div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { upload } from 'https://cdn.jsdelivr.net/npm/@vercel/blob@0.22.0/dist/index.min.js';
+        let selectedFile = null;
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+
+        uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-active'); });
+        uploadZone.addEventListener('dragleave', (e) => { e.preventDefault(); uploadZone.classList.remove('drag-active'); });
+        uploadZone.addEventListener('drop', (e) => { e.preventDefault(); uploadZone.classList.remove('drag-active'); if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+        fileInput.addEventListener('change', (e) => { if(e.target.files[0]) handleFile(e.target.files[0]); });
+
+        function handleFile(file) { selectedFile = file; uploadZone.classList.add('hidden'); document.getElementById('file-selected-zone').classList.remove('hidden'); document.getElementById('file-name').innerText = file.name; document.getElementById('file-size').innerText = (file.size/1024/1024).toFixed(1)+" MB"; }
+        window.clearFile = function() { selectedFile=null; fileInput.value=''; uploadZone.classList.remove('hidden'); document.getElementById('file-selected-zone').classList.add('hidden'); document.getElementById('progress-wrapper').classList.add('hidden'); const btn=document.getElementById('start-btn'); btn.disabled=false; btn.classList.remove('opacity-50'); btn.innerText='开始 AI 深度分析'; }
+
+        window.handleUploadAndAnalyze = async function() {
+            if (!selectedFile) return;
+            const btn = document.getElementById('start-btn');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const progressPercent = document.getElementById('progress-percent');
+
+            btn.disabled = true; btn.classList.add('opacity-50'); document.getElementById('progress-wrapper').classList.remove('hidden');
+
+            try {
+                progressText.innerText = "上传视频到云端...";
+                const blob = await upload(selectedFile.name, selectedFile, { access: 'public', handleUploadUrl: '/api/upload', onUploadProgress: (p) => { const pct = Math.round(p.percentage); progressBar.style.width=pct+'%'; progressPercent.innerText=pct+'%'; } });
+
+                progressText.innerText = "AI 分析中 (约1分钟)..."; progressBar.classList.replace('bg-blue-600','bg-emerald-500');
+                document.getElementById('report-loading').classList.remove('hidden');
+
+                const res = await fetch('/api/proxy', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ videoUrl: blob.url }) });
+                const json = await res.json();
+                if(json.code!==0) throw new Error(json.msg || "API Error");
+
+                let md = ""; try { md = JSON.parse(json.data).output; } catch(e) { md = json.data.output || "Error parsing data"; }
+                document.getElementById('report-loading').classList.add('hidden');
+                document.getElementById('report-empty').classList.add('hidden');
+                document.getElementById('report-content').classList.remove('hidden');
+                document.getElementById('markdown-container').innerHTML = marked.parse(md);
+                progressText.innerText = "✅ 完成"; btn.innerText = "分析完成";
+            } catch(e) {
+                alert(e.message); document.getElementById('report-loading').classList.add('hidden'); btn.disabled=false; btn.classList.remove('opacity-50');
+            }
+        }
+    </script>
+</body>
+</html>
