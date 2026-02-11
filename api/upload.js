@@ -1,6 +1,6 @@
 const { handleUpload } = require('@vercel/blob');
 
-// 强制指定环境，不给 Vercel 误判的机会
+// 🔴 关键修复：强制告诉 Vercel 使用标准 Node.js，不再报 Edge 错误
 module.exports.config = {
   runtime: 'nodejs'
 };
@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
         tokenPayload: JSON.stringify({}),
       }),
       onUploadCompleted: async ({ blob }) => {
-        console.log('Blob created:', blob.url);
+        console.log('文件已存入存储空间:', blob.url);
       },
     });
 
