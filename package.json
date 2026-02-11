@@ -1,6 +1,10 @@
 {
-  "name": "speech-coach",
+  "name": "speech-coach-v2",
   "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "axios": "^1.6.0",
     "@vercel/blob": "^0.23.0"
