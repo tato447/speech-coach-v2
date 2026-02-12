@@ -14,6 +14,14 @@
         .glass-card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
         .loading-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        /* Markdown 样式优化 */
+        .prose h1 { font-size: 1.5em; font-weight: bold; margin-bottom: 0.5em; color: #1f2937; }
+        .prose h2 { font-size: 1.25em; font-weight: bold; margin-top: 1.5em; margin-bottom: 0.5em; color: #2563eb; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.2em; }
+        .prose h3 { font-size: 1.1em; font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; color: #374151; }
+        .prose p { margin-bottom: 0.8em; line-height: 1.6; color: #4b5563; }
+        .prose ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1em; }
+        .prose li { margin-bottom: 0.3em; }
+        .prose strong { color: #111827; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -32,13 +40,13 @@
             <div class="glass-card p-5">
                 <h2 class="font-bold text-sm mb-4 flex items-center gap-2"><i class="fa-solid fa-upload text-blue-600"></i> 视频上传</h2>
                 
-                <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 hover:bg-gray-50 cursor-pointer">
+                <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 hover:bg-gray-50 cursor-pointer transition-colors">
                     <input type="file" id="file-input" class="hidden" accept="video/mp4,video/avi,video/quicktime,video/x-ms-wmv">
                     <div class="flex flex-col items-center justify-center min-h-[160px]">
                         <i class="fa-regular fa-file-video text-4xl text-gray-300 mb-4"></i>
                         <p class="text-gray-700 font-bold mb-2">拖拽视频文件到此处，或点击选择文件</p>
-                        <p class="text-xs text-gray-400 mb-6">支持 MP4、AVI、MOV、WMV 格式，最大 52MB</p>
-                        <button class="bg-blue-600 text-white px-8 py-2.5 rounded text-sm font-medium w-full pointer-events-none">选择视频文件</button>
+                        <p class="text-xs text-gray-400 mb-6">支持 MP4、AVI、MOV、WMV 格式，最大 500MB</p>
+                        <button class="bg-blue-600 text-white px-8 py-2.5 rounded-full text-sm font-medium w-full pointer-events-none shadow-sm">选择视频文件</button>
                     </div>
                 </div>
 
@@ -46,24 +54,29 @@
                     <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center gap-3 mb-4">
                         <i class="fa-solid fa-file-video text-blue-600 text-xl"></i>
                         <div class="flex-1 min-w-0">
-                            <p id="file-name" class="text-sm font-bold truncate">video.mp4</p>
+                            <p id="file-name" class="text-sm font-bold truncate text-gray-800">video.mp4</p>
                             <p id="file-size" class="text-xs text-gray-500">0 MB</p>
                         </div>
-                        <button id="clear-btn" class="text-gray-400 hover:text-red-500"><i class="fa-regular fa-trash-can"></i></button>
+                        <button id="clear-btn" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-regular fa-trash-can"></i></button>
                     </div>
 
                     <div id="progress-wrapper" class="hidden mb-4">
                         <div class="flex justify-between text-[10px] text-gray-500 mb-1">
-                            <span id="progress-text">正在上传视频...</span>
+                            <span id="progress-text">等待上传...</span>
                             <span id="progress-percent">0%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
                             <div id="progress-bar" class="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
                         </div>
                     </div>
+                    
+                    <div id="status-alert" class="hidden mb-4 p-3 rounded-lg text-xs flex items-center gap-2">
+                        <i id="status-icon" class="fa-solid fa-circle-info"></i>
+                        <span id="status-msg"></span>
+                    </div>
 
-                    <button id="start-btn" class="w-full bg-green-500 hover:bg-green-600 text-white py-2.5 rounded text-sm font-bold flex items-center justify-center gap-2">
-                        开始AI分析
+                    <button id="start-btn" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> 开始AI分析
                     </button>
                 </div>
             </div>
@@ -71,31 +84,58 @@
             <div class="glass-card p-5">
                 <h3 class="font-bold text-sm mb-3 text-blue-600">使用说明</h3>
                 <ul class="space-y-3 text-xs text-gray-600">
-                    <li class="flex gap-2"><span>1</span><span>上传您的播音训练视频（1-5分钟）</span></li>
-                    <li class="flex gap-2"><span>2</span><span>等待AI分析您的播音表现</span></li>
-                    <li class="flex gap-2"><span>3</span><span>查看详细的分析报告和改进建议</span></li>
+                    <li class="flex gap-2"><span class="bg-blue-100 text-blue-600 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold">1</span><span>上传您的播音训练视频（1-5分钟）</span></li>
+                    <li class="flex gap-2"><span class="bg-blue-100 text-blue-600 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold">2</span><span>等待AI分析您的播音表现</span></li>
+                    <li class="flex gap-2"><span class="bg-blue-100 text-blue-600 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold">3</span><span>查看详细分析报告和下载PDF</span></li>
                 </ul>
             </div>
         </div>
 
         <div class="lg:col-span-7">
-            <div class="glass-card min-h-[500px] flex flex-col relative h-full">
-                <div id="report-empty" class="flex-1 flex flex-col items-center justify-center text-gray-300">
-                    <i class="fa-solid fa-chart-simple text-6xl mb-4 opacity-10"></i>
-                    <p class="text-xs text-gray-400">报告将在此显示</p>
+            <div class="glass-card min-h-[600px] flex flex-col relative h-full overflow-hidden">
+                <div class="border-b border-gray-100 p-5 bg-gray-50/50 flex justify-between items-start">
+                    <div>
+                        <h2 class="font-bold text-gray-800 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-blue-600"></i> 播音专业分析
+                        </h2>
+                        <p class="text-xs text-gray-500 mt-1">基于AI深度分析的详细报告</p>
+                    </div>
+                    <a id="download-pdf-btn" href="#" target="_blank" class="hidden group flex flex-col items-center gap-1 text-center">
+                        <div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-all shadow-sm">
+                            <i class="fa-solid fa-download text-sm"></i>
+                        </div>
+                        <span class="text-[10px] text-gray-500 group-hover:text-green-600 font-medium">下载报告</span>
+                    </a>
                 </div>
-                <div id="report-loading" class="hidden absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center">
-                    <div class="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full loading-spin mb-4"></div>
-                    <p class="text-sm font-bold text-blue-600">正在进行AI深度分析...</p>
+
+                <div id="report-empty" class="flex-1 flex flex-col items-center justify-center text-gray-300 py-20">
+                    <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-chart-simple text-4xl opacity-20 text-gray-400"></i>
+                    </div>
+                    <p class="text-sm text-gray-400">上传视频后，AI分析报告将在此显示</p>
                 </div>
-                <div id="report-content" class="hidden flex-1 p-8 overflow-y-auto">
-                    <div id="markdown-container" class="prose prose-sm max-w-none"></div>
+
+                <div id="report-loading" class="hidden absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center">
+                    <div class="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full loading-spin mb-6"></div>
+                    <p class="text-base font-bold text-gray-800 mb-2">正在进行AI深度分析...</p>
+                    <p class="text-xs text-gray-500">全能AI教练正在观察您的眼神、听取您的发音</p>
+                    <p class="text-xs text-blue-500 mt-4 bg-blue-50 px-3 py-1 rounded-full">预计耗时 30-60 秒</p>
+                </div>
+
+                <div id="report-content" class="hidden flex-1 p-8 overflow-y-auto bg-white">
+                    <div id="markdown-container" class="prose prose-sm max-w-none prose-blue">
+                        </div>
+                </div>
+                
+                <div id="success-banner" class="hidden bg-green-50 border-t border-green-100 p-3 flex items-center justify-center gap-2 text-green-700 text-xs font-medium animate-pulse">
+                    <i class="fa-solid fa-circle-check"></i> 分析完成！请查看右侧详细报告
                 </div>
             </div>
         </div>
     </main>
 
     <script type="module">
+        // UI 元素绑定
         const uploadZone = document.getElementById('upload-zone');
         const fileInput = document.getElementById('file-input');
         const selectedZone = document.getElementById('file-selected-zone');
@@ -105,9 +145,29 @@
         const progressBar = document.getElementById('progress-bar');
         const progressText = document.getElementById('progress-text');
         const progressPercent = document.getElementById('progress-percent');
+        const statusAlert = document.getElementById('status-alert');
+        const statusMsg = document.getElementById('status-msg');
+        const downloadBtn = document.getElementById('download-pdf-btn');
+        const successBanner = document.getElementById('success-banner');
         
         let selectedFile = null;
 
+        // 辅助函数：显示状态
+        function showStatus(type, msg) {
+            statusAlert.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'bg-blue-50', 'text-blue-700');
+            const icon = document.getElementById('status-icon');
+            
+            if (type === 'error') {
+                statusAlert.classList.add('bg-red-50', 'text-red-700');
+                icon.className = 'fa-solid fa-circle-exclamation';
+            } else {
+                statusAlert.classList.add('bg-blue-50', 'text-blue-700');
+                icon.className = 'fa-solid fa-circle-info';
+            }
+            statusMsg.innerText = msg;
+        }
+
+        // 交互逻辑
         uploadZone.addEventListener('click', () => fileInput.click());
 
         fileInput.addEventListener('change', (e) => {
@@ -117,6 +177,7 @@
                 selectedZone.classList.remove('hidden');
                 document.getElementById('file-name').innerText = selectedFile.name;
                 document.getElementById('file-size').innerText = (selectedFile.size / 1024 / 1024).toFixed(2) + " MB";
+                statusAlert.classList.add('hidden');
             }
         });
 
@@ -126,30 +187,47 @@
             uploadZone.classList.remove('hidden');
             selectedZone.classList.add('hidden');
             progressWrapper.classList.add('hidden');
+            statusAlert.classList.add('hidden');
+            successBanner.classList.add('hidden');
+            downloadBtn.classList.add('hidden');
+            startBtn.disabled = false;
+            startBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> 开始AI分析';
+            startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         });
 
+        // 核心流程
         startBtn.addEventListener('click', async () => {
             if (!selectedFile) return;
 
+            // 1. 重置界面状态
             startBtn.disabled = true;
-            startBtn.classList.add('opacity-50');
+            startBtn.classList.add('opacity-50', 'cursor-not-allowed');
             progressWrapper.classList.remove('hidden');
-            progressText.innerText = "正在准备上传...";
-
+            statusAlert.classList.add('hidden');
+            successBanner.classList.add('hidden');
+            downloadBtn.classList.add('hidden');
+            
             try {
-                // 1. 找后端要签名 (为了安全)
+                // ------------------------------------------------
+                // 步骤 A: 获取阿里云签名
+                // ------------------------------------------------
+                progressText.innerText = "准备上传通道...";
                 const signRes = await fetch('/api/upload');
+                if (!signRes.ok) throw new Error("无法连接服务器获取签名");
                 const signData = await signRes.json();
                 
-                if (!signData.uploadUrl) throw new Error("无法获取上传权限，请检查 AccessKey 配置");
+                if (!signData.uploadUrl) throw new Error("获取上传签名失败");
 
-                // 2. 极速直传阿里云 (使用原生 XHR 以获取精准进度)
-                progressText.innerText = "🚀 正在极速上传到阿里云...";
+                // ------------------------------------------------
+                // 步骤 B: 极速直传阿里云 (原生 XHR)
+                // ------------------------------------------------
+                progressText.innerText = "🚀 正在上传视频到云端...";
                 
                 await new Promise((resolve, reject) => {
                     const xhr = new XMLHttpRequest();
                     xhr.open('PUT', signData.uploadUrl, true);
-                    xhr.setRequestHeader('Content-Type', 'video/mp4'); // 强制 MP4 类型
+                    // 强制 MP4，防止 OSS 因为 MIME 类型拦截
+                    xhr.setRequestHeader('Content-Type', 'video/mp4'); 
                     
                     xhr.upload.onprogress = (e) => {
                         if (e.lengthComputable) {
@@ -161,50 +239,79 @@
 
                     xhr.onload = () => {
                         if (xhr.status === 200) resolve();
-                        else reject(new Error('阿里云拒绝了上传，可能是跨域没配好'));
+                        else reject(new Error(`上传被拒绝 (Code: ${xhr.status})`));
                     };
                     
-                    xhr.onerror = () => reject(new Error('网络连接中断'));
+                    xhr.onerror = () => reject(new Error('网络中断'));
                     xhr.send(selectedFile);
                 });
 
-                // 3. 上传成功，通知 Coze 分析
-                progressText.innerText = "✅ 上传完成，正在唤醒 AI...";
+                // ------------------------------------------------
+                // 步骤 C: 唤醒 Coze AI 进行分析
+                // ------------------------------------------------
+                progressText.innerText = "✅ 上传完成，AI 正在分析...";
+                startBtn.innerHTML = '<i class="fa-solid fa-spinner loading-spin"></i> AI 正在思考中...';
+                
                 document.getElementById('report-loading').classList.remove('hidden');
                 document.getElementById('report-empty').classList.add('hidden');
+                document.getElementById('report-content').classList.add('hidden');
 
-                const res = await fetch('/api/proxy', {
+                const analyzeRes = await fetch('/api/proxy', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ videoUrl: signData.publicUrl })
                 });
 
-                const json = await res.json();
+                const json = await analyzeRes.json();
                 
-                // 4. 显示结果
+                if (analyzeRes.status !== 200) {
+                    throw new Error(json.error || "分析服务未响应");
+                }
+
+                // ------------------------------------------------
+                // 步骤 D: 解析并显示结果 (含 PDF)
+                // ------------------------------------------------
                 document.getElementById('report-loading').classList.add('hidden');
                 document.getElementById('report-content').classList.remove('hidden');
-                
-                let mdContent = "";
-                try {
-                    const data = typeof json.data === 'string' ? JSON.parse(json.data) : json.data;
-                    mdContent = data.output || "分析完成";
-                } catch(e) {
-                    mdContent = json.data?.output || "暂无分析内容";
+                successBanner.classList.remove('hidden');
+
+                // 兼容性解析: Coze 有时返回 string 有时返回 object
+                let data = json.data;
+                if (typeof data === 'string') {
+                    try { data = JSON.parse(data); } catch(e) { console.error("JSON Parse Error", e); }
                 }
-                
+
+                // 1. 显示 Markdown 报告
+                const mdContent = data?.output || json.data?.output || "未获取到文字报告，请检查工作流配置。";
                 document.getElementById('markdown-container').innerHTML = marked.parse(mdContent);
-                startBtn.innerText = "分析完成";
+
+                // 2. 显示 PDF 下载按钮 (🔴 关键修复点)
+                // 尝试从 data.pdf_url 获取，如果失败尝试 data.pdf_url.link (有些插件结构不同)
+                const pdfUrl = data?.pdf_url || data?.pdf_url?.link || null;
+                
+                if (pdfUrl) {
+                    console.log("获取到 PDF 链接:", pdfUrl);
+                    downloadBtn.href = pdfUrl;
+                    downloadBtn.classList.remove('hidden'); // 显示按钮
+                } else {
+                    console.warn("未检测到 PDF 链接，Coze 返回数据:", data);
+                }
+
+                // 恢复按钮状态
+                startBtn.innerHTML = '<i class="fa-solid fa-check"></i> 分析完成';
+                startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 startBtn.disabled = false;
-                startBtn.classList.remove('opacity-50');
 
             } catch (error) {
                 console.error(error);
-                alert("出错: " + error.message);
+                showStatus('error', error.message);
+                
                 document.getElementById('report-loading').classList.add('hidden');
+                document.getElementById('report-empty').classList.remove('hidden'); // 显示空状态而非保留旧报告
+                
                 startBtn.disabled = false;
-                startBtn.classList.remove('opacity-50');
-                startBtn.innerText = "重试";
+                startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                startBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> 重试';
             }
         });
     </script>
