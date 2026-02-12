@@ -74,7 +74,6 @@
                     <li class="flex gap-2"><span>1</span><span>上传您的播音训练视频（1-5分钟）</span></li>
                     <li class="flex gap-2"><span>2</span><span>等待AI分析您的播音表现</span></li>
                     <li class="flex gap-2"><span>3</span><span>查看详细的分析报告和改进建议</span></li>
-                    <li class="flex gap-2"><span>4</span><span>下载PDF报告用于后续参考</span></li>
                 </ul>
             </div>
         </div>
@@ -97,25 +96,6 @@
     </main>
 
     <script type="module">
-        // 1. 引入 Firebase 库
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-
-        // 2. 你的专属配置 (已填好)
-        const firebaseConfig = {
-            apiKey: "AIzaSyDYtTUdR7_x566bMMu0rzZhSxUpyhjlvDs",
-            authDomain: "speech-coach-1d43f.firebaseapp.com",
-            projectId: "speech-coach-1d43f",
-            storageBucket: "speech-coach-1d43f.firebasestorage.app",
-            messagingSenderId: "965836807471",
-            appId: "1:965836807471:web:b7fd84333259b0094815da"
-        };
-
-        // 3. 初始化 Firebase
-        const app = initializeApp(firebaseConfig);
-        const storage = getStorage(app);
-
-        // UI 元素
         const uploadZone = document.getElementById('upload-zone');
         const fileInput = document.getElementById('file-input');
         const selectedZone = document.getElementById('file-selected-zone');
@@ -128,7 +108,6 @@
         
         let selectedFile = null;
 
-        // 交互逻辑
         uploadZone.addEventListener('click', () => fileInput.click());
 
         fileInput.addEventListener('change', (e) => {
@@ -155,37 +134,54 @@
             startBtn.disabled = true;
             startBtn.classList.add('opacity-50');
             progressWrapper.classList.remove('hidden');
-            progressText.innerText = "正在上传到 Google 服务器...";
+            progressText.innerText = "正在准备上传...";
 
             try {
-                // 第一步：上传到 Firebase
-                const uniqueName = 'videos/' + Date.now() + '-' + selectedFile.name;
-                const storageRef = ref(storage, uniqueName);
-
-                // 上传
-                const snapshot = await uploadBytes(storageRef, selectedFile);
+                // 1. 找后端要签名 (为了安全)
+                const signRes = await fetch('/api/upload');
+                const signData = await signRes.json();
                 
-                // 模拟进度条
-                progressBar.style.width = '100%';
-                progressPercent.innerText = '100%';
-                
-                // 获取 URL
-                const publicUrl = await getDownloadURL(snapshot.ref);
-                console.log("上传成功，URL:", publicUrl);
+                if (!signData.uploadUrl) throw new Error("无法获取上传权限，请检查 AccessKey 配置");
 
-                // 第二步：分析
-                progressText.innerText = "✅ 上传成功，正在分析...";
+                // 2. 极速直传阿里云 (使用原生 XHR 以获取精准进度)
+                progressText.innerText = "🚀 正在极速上传到阿里云...";
+                
+                await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('PUT', signData.uploadUrl, true);
+                    xhr.setRequestHeader('Content-Type', 'video/mp4'); // 强制 MP4 类型
+                    
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const percent = Math.round((e.loaded / e.total) * 100);
+                            progressBar.style.width = percent + '%';
+                            progressPercent.innerText = percent + '%';
+                        }
+                    };
+
+                    xhr.onload = () => {
+                        if (xhr.status === 200) resolve();
+                        else reject(new Error('阿里云拒绝了上传，可能是跨域没配好'));
+                    };
+                    
+                    xhr.onerror = () => reject(new Error('网络连接中断'));
+                    xhr.send(selectedFile);
+                });
+
+                // 3. 上传成功，通知 Coze 分析
+                progressText.innerText = "✅ 上传完成，正在唤醒 AI...";
                 document.getElementById('report-loading').classList.remove('hidden');
                 document.getElementById('report-empty').classList.add('hidden');
 
                 const res = await fetch('/api/proxy', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ videoUrl: publicUrl })
+                    body: JSON.stringify({ videoUrl: signData.publicUrl })
                 });
 
                 const json = await res.json();
                 
+                // 4. 显示结果
                 document.getElementById('report-loading').classList.add('hidden');
                 document.getElementById('report-content').classList.remove('hidden');
                 
@@ -194,7 +190,7 @@
                     const data = typeof json.data === 'string' ? JSON.parse(json.data) : json.data;
                     mdContent = data.output || "分析完成";
                 } catch(e) {
-                    mdContent = json.data?.output || "结果解析异常";
+                    mdContent = json.data?.output || "暂无分析内容";
                 }
                 
                 document.getElementById('markdown-container').innerHTML = marked.parse(mdContent);
@@ -203,8 +199,8 @@
                 startBtn.classList.remove('opacity-50');
 
             } catch (error) {
-                console.error("Error:", error);
-                alert("出错啦: " + error.message);
+                console.error(error);
+                alert("出错: " + error.message);
                 document.getElementById('report-loading').classList.add('hidden');
                 startBtn.disabled = false;
                 startBtn.classList.remove('opacity-50');
